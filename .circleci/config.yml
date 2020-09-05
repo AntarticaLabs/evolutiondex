@@ -1,0 +1,54 @@
+version: 2.1
+executors:
+  default:
+    docker:
+      - image: orbiterco/eosio:latest
+commands:
+  build_project:
+    description: "Build project"
+    steps:
+      - run:
+          command: |
+            chmod +x build.sh
+            make build-local
+          environment:
+            BOOST_ROOT: /root/eosio/1.8/src/boost_1_70_0
+      - store_artifacts:
+          path: ./build/evolutiondex/evolutiondex.abi
+          destination: evolutiondex.abi
+      - store_artifacts:
+          path: ./build/evolutiondex/evolutiondex.wasm
+          destination: evolutiondex.wasm
+      - store_artifacts:
+          path: ./build/wevotethefee/wevotethefee.abi
+          destination: wevotethefee.abi
+      - store_artifacts:
+          path: ./build/wevotethefee/wevotethefee.wasm
+          destination: wevotethefee.wasm
+  test:
+    description: "Run Tests"
+    steps:
+      - run:
+          command: |
+            mkdir -p ./test-results
+            make test-local
+          environment:
+            BOOST_ROOT: /root/eosio/1.8/src/boost_1_70_0
+            BOOST_TEST_LOG_FORMAT: JUNIT
+            BOOST_TEST_LOG_SINK: test-results/junit.xml
+      - store_test_results:
+          path: ./test-results
+      - store_artifacts:
+          path: ./test-results/junit.xml
+          destination: junit.xml
+jobs:
+  build_and_test:
+    executor: default
+    steps:
+      - checkout
+      - build_project
+      - test
+workflows:
+  pr:
+    jobs:
+      - build_and_test

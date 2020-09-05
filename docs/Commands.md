@@ -1,4 +1,3 @@
-**NOTE: In this example we use the PAIR EOS/PESO, which creates the evotoken EOSPESO. We assume an EOS token located in the eosio.token contract as usual, and a PESO token located in the contract pesocontract. You would need to replace these variables depending on your trading pairs.** 
 
 First, let us describe the single actions of the smart contract.
 
