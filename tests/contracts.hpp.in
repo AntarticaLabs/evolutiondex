@@ -13,10 +13,10 @@ struct contracts {
 	}
 
 	static std::vector<uint8_t> badtoken_wasm() {
-		return read_wasm("${CMAKE_SOURCE_DIR}/badtoken/badtoken.wasm"); // TODO: needs badtoken compiled
+        return read_wasm("${CMAKE_BINARY_DIR}/../badtoken/badtoken.wasm");
 	}
 	static std::vector<char> badtoken_abi() {
-		return read_abi("${CMAKE_SOURCE_DIR}/badtoken/badtoken.abi"); // TODO: needs badtoken compiled
+        return read_abi("${CMAKE_BINARY_DIR}/../badtoken/badtoken.abi");
 	}
 
 	static std::vector<uint8_t> evolutiondex_wasm() {

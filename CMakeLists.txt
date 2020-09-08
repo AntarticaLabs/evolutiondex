@@ -29,6 +29,7 @@ else()
     set(TEST_BUILD_TYPE ${CMAKE_BUILD_TYPE})
 endif()
 
+add_subdirectory(badtoken)
 add_subdirectory(wevotethefee)
 add_subdirectory(evolutiondex)
 

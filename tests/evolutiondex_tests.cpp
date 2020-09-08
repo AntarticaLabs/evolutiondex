@@ -13,7 +13,6 @@
 using namespace eosio::testing;
 using namespace eosio;
 using namespace eosio::chain;
-using namespace eosio::testing;
 using namespace fc;
 using namespace std;
 using namespace boost::multiprecision;
@@ -21,6 +20,12 @@ using namespace boost::multiprecision;
 using int128 = boost::multiprecision::int128_t;
 using int256 = boost::multiprecision::int256_t;
 using mvo = fc::mutable_variant_object;
+
+struct ext_symbol {
+    symbol symbol;
+    name contract;
+};
+FC_REFLECT(ext_symbol, (symbol)(contract))
 
 class evolutiondex_tester : public tester {
 public:
@@ -80,10 +85,10 @@ public:
 	action_result open(name owner, symbol sym, name ram_payer) {
 		return push_action(N(evolutiondex), owner, N(open), mvo()("owner", owner)("symbol", sym)("ram_payer", ram_payer));
 	}
-	action_result openext(name user, name payer, extended_symbol ext_symbol) {
+	action_result openext(name user, name payer, ext_symbol ext_symbol) {
 		return push_action(N(evolutiondex), payer, N(openext), mvo()("user", user)("payer", payer)("ext_symbol", ext_symbol));
 	}
-	action_result closeext(const name user, const name to, const extended_symbol ext_symbol) {
+	action_result closeext(const name user, const name to, const ext_symbol ext_symbol) {
 		return push_action(N(evolutiondex), user, N(closeext), mvo()("user", user)("to", to)("ext_symbol", ext_symbol)("memo", ""));
 	}
 	action_result withdraw(name user, name to, extended_asset to_withdraw) {
@@ -182,12 +187,12 @@ public:
 		issue(N(alice), N(alice), asset::from_string("461168601842738.7903 TUSD"), "");
 	}
 	void many_openext() {
-		openext(N(alice), N(alice), extended_symbol{symbol::from_string("4,EOS"), N(eosio.token)});
-		openext(N(alice), N(alice), extended_symbol{symbol::from_string("4,VOICE"), N(eosio.token)});
-		openext(N(alice), N(alice), extended_symbol{symbol::from_string("4,TUSD"), N(eosio.token)});
-		openext(N(bob), N(alice), extended_symbol{symbol::from_string("4,EOS"), N(eosio.token)});
-		openext(N(bob), N(alice), extended_symbol{symbol::from_string("4,VOICE"), N(eosio.token)});
-		openext(N(bob), N(alice), extended_symbol{symbol::from_string("4,TUSD"), N(eosio.token)});
+		openext(N(alice), N(alice), ext_symbol{symbol::from_string("4,EOS"), N(eosio.token)});
+		openext(N(alice), N(alice), ext_symbol{symbol::from_string("4,VOICE"), N(eosio.token)});
+		openext(N(alice), N(alice), ext_symbol{symbol::from_string("4,TUSD"), N(eosio.token)});
+		openext(N(bob), N(alice), ext_symbol{symbol::from_string("4,EOS"), N(eosio.token)});
+		openext(N(bob), N(alice), ext_symbol{symbol::from_string("4,VOICE"), N(eosio.token)});
+		openext(N(bob), N(alice), ext_symbol{symbol::from_string("4,TUSD"), N(eosio.token)});
 	}
 	void many_transfer() {
 		transfer(N(eosio.token), N(alice), N(evolutiondex), asset::from_string("461000000000000.0000 EOS"), "");
@@ -247,8 +252,7 @@ BOOST_FIXTURE_TEST_CASE(add_rem_exchange, evolutiondex_tester) try {
 			  N(wevotethefee));
 
 	auto alice_evo_balance = get_balance(N(evolutiondex), N(alice), N(accounts), EVO.value, "account");
-	auto bal = mvo()("balance", asset::from_string("10000000.0000 EVO"));
-	// BOOST_REQUIRE_EQUAL(alice_evo_balance, bal); TODO: fix
+	BOOST_REQUIRE_EQUAL(alice_evo_balance["balance"].as_string(), "10000000.0000 EVO");
 
 	// ADDLIQUIDITY
 	BOOST_REQUIRE_EQUAL(error("missing authority of alice"),
@@ -364,13 +368,13 @@ BOOST_FIXTURE_TEST_CASE(add_rem_exchange, evolutiondex_tester) try {
 						exchange(N(alice), EVO, extend(asset::from_string("-100000328.6280 VOICE")), asset::from_string("0.0000 EOS")));
 	BOOST_REQUIRE_EQUAL(wasm_assert_msg("pair token does not exist"),
 						exchange(N(alice), TUSD, extend(asset::from_string("-8.0000 VOICE")), asset::from_string("0.0000 EOS")));
-	BOOST_REQUIRE_EQUAL(wasm_assert_msg("extended_symbol mismatch"),
+	BOOST_REQUIRE_EQUAL(wasm_assert_msg("ext_symbol mismatch"),
 						exchange(N(alice), EVO, extend(asset::from_string("4.000 EOS")), asset::from_string("10.0000 VOICE")));
 	BOOST_REQUIRE_EQUAL(
-		wasm_assert_msg("extended_symbol mismatch"),
+		wasm_assert_msg("ext_symbol mismatch"),
 		exchange(N(alice), EVO, extended_asset{asset::from_string("4.0000 EOS"), N(another)}, asset::from_string("10.0000 VOICE")));
 	BOOST_REQUIRE_EQUAL(
-		wasm_assert_msg("extended_symbol mismatch"),
+		wasm_assert_msg("ext_symbol mismatch"),
 		exchange(N(alice), EVO, extended_asset{asset::from_string("1.0000 VOICE"), N(another)}, asset::from_string("1.0000 EOS")));
 	BOOST_REQUIRE_EQUAL(wasm_assert_msg("available is less than expected"),
 						exchange(N(alice), EVO, extend(asset::from_string("4.0000 EOS")), asset::from_string("400.0000 VOICE")));
@@ -610,16 +614,16 @@ BOOST_FIXTURE_TEST_CASE(memoexchange_test, evolutiondex_tester) try {
 								  N(wevotethefee)));
 
 	BOOST_REQUIRE_EQUAL(
-		wasm_assert_msg("extended_symbol mismatch"),
+		wasm_assert_msg("ext_symbol mismatch"),
 		transfer(N(eosio.token), N(alice), N(evolutiondex), asset::from_string("4.0000 EOS"), "exchange: EVO, 166536 VOICE"));
 
 	BOOST_REQUIRE_EQUAL(
 		wasm_assert_msg("available is less than expected"),
 		transfer(N(eosio.token), N(alice), N(evolutiondex), asset::from_string("4.0000 EOS"), "exchange: EVO, 16.6536 VOICE"));
 
-	BOOST_REQUIRE_EQUAL(wasm_assert_msg("extended_symbol mismatch"),
+	BOOST_REQUIRE_EQUAL(wasm_assert_msg("ext_symbol mismatch"),
 						transfer(N(carol), N(carol), N(evolutiondex), asset::from_string("4.0000 EOS"), "exchange: EVO, 16.6535 VOICE"));
-	BOOST_REQUIRE_EQUAL(wasm_assert_msg("extended_symbol mismatch"),
+	BOOST_REQUIRE_EQUAL(wasm_assert_msg("ext_symbol mismatch"),
 						transfer(N(carol), N(carol), N(evolutiondex), asset::from_string("1.0000 VOICE"), "exchange: EVO, 0.0001 EOS"));
 
 	int64_t pre_eos_balance = token_balance(N(eosio.token), N(alice), EOS.value);
@@ -682,12 +686,12 @@ BOOST_FIXTURE_TEST_CASE(the_other_actions, evolutiondex_tester) try {
 						push_action(N(evolutiondex),
 									N(bob),
 									N(openext),
-									mvo()("user", N(bob))("payer", N(natalia))("ext_symbol", extended_symbol{VOICE4, N(eosio.token)})));
-	BOOST_REQUIRE_EQUAL(success(), openext(N(alice), N(alice), extended_symbol{EOS4, N(eosio.token)}));
-	BOOST_REQUIRE_EQUAL(success(), openext(N(alice), N(alice), extended_symbol{VOICE4, N(eosio.token)}));
-	BOOST_REQUIRE_EQUAL(success(), openext(N(alice), N(alice), extended_symbol{VOICE4, N(eosio.token)}));
-	BOOST_REQUIRE_EQUAL(wasm_assert_msg("user account does not exist"), openext(N(cat), N(alice), extended_symbol{VOICE4, N(eosio.token)}));
-	BOOST_REQUIRE_EQUAL(success(), openext(N(alice), N(alice), extended_symbol{VOICE4, N(eosio.token)}));
+									mvo()("user", N(bob))("payer", N(natalia))("ext_symbol", ext_symbol{VOICE4, N(eosio.token)})));
+	BOOST_REQUIRE_EQUAL(success(), openext(N(alice), N(alice), ext_symbol{EOS4, N(eosio.token)}));
+	BOOST_REQUIRE_EQUAL(success(), openext(N(alice), N(alice), ext_symbol{VOICE4, N(eosio.token)}));
+	BOOST_REQUIRE_EQUAL(success(), openext(N(alice), N(alice), ext_symbol{VOICE4, N(eosio.token)}));
+	BOOST_REQUIRE_EQUAL(wasm_assert_msg("user account does not exist"), openext(N(cat), N(alice), ext_symbol{VOICE4, N(eosio.token)}));
+	BOOST_REQUIRE_EQUAL(success(), openext(N(alice), N(alice), ext_symbol{VOICE4, N(eosio.token)}));
 
 	// ONTRANSFER
 	BOOST_REQUIRE_EQUAL(wasm_assert_msg("This transfer is not for evolutiondex"),
@@ -800,12 +804,12 @@ BOOST_FIXTURE_TEST_CASE(the_other_actions, evolutiondex_tester) try {
 		push_action(N(evolutiondex),
 					N(bob),
 					N(closeext),
-					mvo()("user", N(natalia))("ext_symbol", extended_symbol{EVO4, N(eosio.token)})("to", N(alice))("memo", "")));
-	BOOST_REQUIRE_EQUAL(success(), closeext(N(alice), N(alice), extended_symbol{VOICE4, N(eosio.token)}));
-	BOOST_REQUIRE_EQUAL(success(), closeext(N(alice), N(bob), extended_symbol{EOS4, N(eosio.token)}));
+					mvo()("user", N(natalia))("ext_symbol", ext_symbol{EVO4, N(eosio.token)})("to", N(alice))("memo", "")));
+	BOOST_REQUIRE_EQUAL(success(), closeext(N(alice), N(alice), ext_symbol{VOICE4, N(eosio.token)}));
+	BOOST_REQUIRE_EQUAL(success(), closeext(N(alice), N(bob), ext_symbol{EOS4, N(eosio.token)}));
 	BOOST_REQUIRE_EQUAL(9999999, token_balance(N(eosio.token), N(bob), EOS.value));
 	BOOST_REQUIRE_EQUAL(wasm_assert_msg("User does not have such token"),
-						closeext(N(alice), N(bob), extended_symbol{EOS4, N(eosio.token)}));
+						closeext(N(alice), N(bob), ext_symbol{EOS4, N(eosio.token)}));
 
 	// CHANGEFEE
 	BOOST_REQUIRE_EQUAL(error("missing authority of wevotethefee"),
@@ -925,8 +929,8 @@ BOOST_FIXTURE_TEST_CASE(we_vote_the_fee, evolutiondex_tester) try {
 	evo_stats = get_balance(N(evolutiondex), name(EVO.value), N(stat), EVO.value, "currency_stats");
 	BOOST_REQUIRE_EQUAL(100, evo_stats["fee"]);
 
-	openext(N(eva), N(eva), extended_symbol{symbol::from_string("4,EOS"), N(eosio.token)});
-	openext(N(eva), N(eva), extended_symbol{symbol::from_string("4,VOICE"), N(eosio.token)});
+	openext(N(eva), N(eva), ext_symbol{symbol::from_string("4,EOS"), N(eosio.token)});
+	openext(N(eva), N(eva), ext_symbol{symbol::from_string("4,VOICE"), N(eosio.token)});
 	push_action(N(evolutiondex),
 				N(eva),
 				N(remliquidity),
