@@ -5,21 +5,30 @@ function usage() {
   printf "Usage: $0 OPTION...
   -e DIR      Directory where EOSIO is installed. (Default: $HOME/eosio/X.Y)
   -c DIR      Directory where EOSIO.CDT is installed. (Default: /usr/local/eosio.cdt)
+  -t          Build unit tests.
   -y          Noninteractive mode (Uses defaults for each prompt.)
   -h          Print this help menu.
    \\n" "$0" 1>&2
   exit 1
 }
 
+BUILD_TESTS=false
+BUILD_TYPE=Release
 
 if [ $# -ne 0 ]; then
-  while getopts "e:c:yh" opt; do
+  while getopts "e:c:tydh" opt; do
     case "${opt}" in
     e)
       EOSIO_DIR_PROMPT=$OPTARG
       ;;
     c)
       CDT_DIR_PROMPT=$OPTARG
+      ;;
+    t)
+      BUILD_TESTS=true
+      ;;
+    d)
+      BUILD_TYPE=Debug
       ;;
     y)
       NONINTERACTIVE=true
@@ -47,23 +56,33 @@ fi
 . ./scripts/.environment
 . ./scripts/helper.sh
 
-# Prompt user for location of eosio.
-eosio-directory-prompt
+if [[ ${BUILD_TESTS} == true ]]; then
+  # Prompt user for location of eosio.
+  eosio-directory-prompt
+fi
 
 # Prompt user for location of eosio.cdt.
 cdt-directory-prompt
 
-# Ensure eosio version is appropriate.
-nodeos-version-check
+# Include CDT_INSTALL_DIR in CMAKE_FRAMEWORK_PATH
+echo "Using EOSIO.CDT installation at: $CDT_INSTALL_DIR"
+export CMAKE_FRAMEWORK_PATH="${CDT_INSTALL_DIR}:${CMAKE_FRAMEWORK_PATH}"
+
+if [[ ${BUILD_TESTS} == true ]]; then
+  # Ensure eosio version is appropriate.
+  nodeos-version-check
+
+  # Include EOSIO_INSTALL_DIR in CMAKE_FRAMEWORK_PATH
+  echo "Using EOSIO installation at: $EOSIO_INSTALL_DIR"
+  export CMAKE_FRAMEWORK_PATH="${EOSIO_INSTALL_DIR}:${CMAKE_FRAMEWORK_PATH}"
+fi
 
 printf "\t=========== Building contracts ===========\n\n"
-
 RED='\033[0;31m'
 NC='\033[0m'
-
-CORES=$(getconf _NPROCESSORS_ONLN)
+CPU_CORES=$(getconf _NPROCESSORS_ONLN)
 mkdir -p build
 pushd build &>/dev/null
-cmake ../
-make -j${CORES}
+cmake -DBUILD_TESTS=${BUILD_TESTS} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ../
+make -j $CPU_CORES
 popd &>/dev/null

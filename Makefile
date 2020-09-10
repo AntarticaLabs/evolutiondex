@@ -7,17 +7,20 @@ help: ## This help.
 
 .DEFAULT_GOAL := help
 
+docker-up: ## Start docker
+	@sudo service docker start
+
 build: ## Build using Docker
-	@docker run -t -i -v $(CWD):/dapp orbiterco/eosio -c "export BOOST_ROOT=/root/eosio/1.8/src/boost_1_70_0 && cd /dapp && /bin/bash /dapp/build.sh -y"
+	@docker run -t -i -v $(CWD):/dapp kesar/eos-dev:207-170 -c "cd /dapp && /bin/bash /dapp/build.sh -y"
 
 build-test: ## Build & Test using Docker
-	@docker run -t -i -v $(CWD):/dapp orbiterco/eosio -c "export BOOST_ROOT=/root/eosio/1.8/src/boost_1_70_0 && cd /dapp && /bin/bash /dapp/build.sh -y && /dapp/build/tests/unit_test"
+	@docker run -t -i -v $(CWD):/dapp kesar/eos-dev:207-170 -c "cd /dapp && /bin/bash /dapp/build.sh -y -t && /dapp/build/tests/unit_test"
 
 build-local: ## Build local
-	./build.sh -y
+	./build.sh -y -t
 
 test-local: ## Test local
 	./build/tests/unit_test
 
 build-test-debug: ## Build & Test with debug using Docker
-	@docker run -t -i -v $(CWD):/dapp orbiterco/eosio -c "export BOOST_ROOT=/root/eosio/1.8/src/boost_1_70_0 && cd /dapp && /bin/bash /dapp/build.sh -y && /dapp/build/tests/unit_test -- --verbose"
+	@docker run -t -i -v $(CWD):/dapp kesar/eos-dev:207-170 -c "cd /dapp && /bin/bash /dapp/build.sh -y -t -d -- --verbose"

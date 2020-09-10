@@ -13,24 +13,24 @@ struct contracts {
 	}
 
 	static std::vector<uint8_t> badtoken_wasm() {
-        return read_wasm("${CMAKE_BINARY_DIR}/../badtoken/badtoken.wasm");
+        return read_wasm("${CMAKE_BINARY_DIR}/../contracts/badtoken/badtoken.wasm");
 	}
 	static std::vector<char> badtoken_abi() {
-        return read_abi("${CMAKE_BINARY_DIR}/../badtoken/badtoken.abi");
+        return read_abi("${CMAKE_BINARY_DIR}/../contracts/badtoken/badtoken.abi");
 	}
 
 	static std::vector<uint8_t> evolutiondex_wasm() {
-		return read_wasm("${CMAKE_BINARY_DIR}/../evolutiondex/evolutiondex.wasm");
+		return read_wasm("${CMAKE_BINARY_DIR}/../contracts/evolutiondex/evolutiondex.wasm");
 	}
 	static std::vector<char> evolutiondex_abi() {
-		return read_abi("${CMAKE_BINARY_DIR}/../evolutiondex/evolutiondex.abi");
+		return read_abi("${CMAKE_BINARY_DIR}/../contracts/evolutiondex/evolutiondex.abi");
 	}
 
 	static std::vector<uint8_t> wevotethefee_wasm() {
-		return read_wasm("${CMAKE_BINARY_DIR}/../wevotethefee/wevotethefee.wasm");
+		return read_wasm("${CMAKE_BINARY_DIR}/../contracts/wevotethefee/wevotethefee.wasm");
 	}
 	static std::vector<char> wevotethefee_abi() {
-		return read_abi("${CMAKE_BINARY_DIR}/../wevotethefee/wevotethefee.abi");
+		return read_abi("${CMAKE_BINARY_DIR}/../contracts/wevotethefee/wevotethefee.abi");
 	}
 };
 } // namespace testing
