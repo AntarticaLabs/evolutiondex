@@ -798,7 +798,7 @@ BOOST_FIXTURE_TEST_CASE(the_other_actions, evolutiondex_tester) try {
 		push_action(N(evolutiondex),
 					N(bob),
 					N(closeext),
-					mvo()("user", N(natalia))("extended_symbol", extended_symbol{EVO4, N(eosio.token)})("to", N(alice))("memo", "")));
+					mvo()("user", N(natalia))("ext_symbol", extended_symbol{EVO4, N(eosio.token)})("to", N(alice))("memo", "")));
 	BOOST_REQUIRE_EQUAL(success(), closeext(N(alice), N(alice), extended_symbol{VOICE4, N(eosio.token)}));
 	BOOST_REQUIRE_EQUAL(success(), closeext(N(alice), N(bob), extended_symbol{EOS4, N(eosio.token)}));
 	BOOST_REQUIRE_EQUAL(9999999, token_balance(N(eosio.token), N(bob), EOS.value));
