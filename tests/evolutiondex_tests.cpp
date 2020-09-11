@@ -53,7 +53,7 @@ public:
 	}
 
 	fc::variant get_balance(name smartctr, name user, name table, int64_t id, string struc) {
-		vector<char> data = get_row_by_account(smartctr, user, table, name(id));
+		vector<char> data = get_row_by_account(smartctr, user, table, account_name(id));
 		return data.empty() ? fc::variant() : abi_ser.binary_to_variant(struc, data, abi_serializer::create_yield_function(fc::microseconds{1000 * 1000}));
 	}
 
@@ -136,15 +136,15 @@ public:
 
 	int64_t balance(name user, int64_t id) {
 		auto _balance = get_balance(N(evolutiondex), user, N(evodexacnts), id, "evodexaccount");
-		return _balance["balance"]["quantity"].as_int64();
+		return to_int(fc::json::to_string(_balance["balance"]["quantity"], fc::time_point(fc::time_point::now() + fc::microseconds{1000 * 1000}) ));
 	}
 	int64_t tok_balance(name user, int64_t id) {
 		auto _balance = get_balance(N(evolutiondex), user, N(accounts), id, "account");
-		return _balance["balance"].as_int64();
+		return to_int(fc::json::to_string(_balance["balance"], fc::time_point(fc::time_point::now() + fc::microseconds{1000 * 1000}) ));
 	}
 	int64_t token_balance(name contract, name user, int64_t id) {
 		auto _balance = get_balance(contract, user, N(accounts), id, "account");
-		return _balance["balance"].as_int64();
+		return to_int(fc::json::to_string(_balance["balance"], fc::time_point(fc::time_point::now() + fc::microseconds{1000 * 1000}) ));
 	}
 	int64_t to_int(string in) {
 		auto sub = in.substr(1, in.length() - 2);
@@ -152,9 +152,9 @@ public:
 	}
 	vector<int64_t> system_balance(int64_t id) {
 		auto sys_balance_json = get_balance(N(evolutiondex), name(id), N(stat), id, "currency_stats");
-		auto saldo1 = sys_balance_json["pool1"]["quantity"].as_int64();
-		auto saldo2 = sys_balance_json["pool2"]["quantity"].as_int64();
-		auto minted =sys_balance_json["supply"].as_int64();
+		auto saldo1 = to_int(fc::json::to_string(sys_balance_json["pool1"]["quantity"], fc::time_point(fc::time_point::now() + fc::microseconds{1000 * 1000}) ));
+		auto saldo2 = to_int(fc::json::to_string(sys_balance_json["pool2"]["quantity"], fc::time_point(fc::time_point::now() + fc::microseconds{1000 * 1000}) ));
+		auto minted = to_int(fc::json::to_string(sys_balance_json["supply"], fc::time_point(fc::time_point::now() + fc::microseconds{1000 * 1000}) ));
 		vector<int64_t> ans = {saldo1, saldo2, minted};
 		return ans;
 	}
