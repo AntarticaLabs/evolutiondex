@@ -1,0 +1,51 @@
+version: 2.1
+executors:
+  default:
+    docker:
+      - image: kesar/eos-dev:207-170
+commands:
+  build_project:
+    description: "Build project"
+    steps:
+      - run:
+          command: |
+            chmod +x build.sh
+            make build-local
+      - store_artifacts:
+          path: ./build/contracts/evolutiondex/evolutiondex.abi
+          destination: evolutiondex.abi
+      - store_artifacts:
+          path: ./build/contracts/evolutiondex/evolutiondex.wasm
+          destination: evolutiondex.wasm
+      - store_artifacts:
+          path: ./build/contracts/wevotethefee/wevotethefee.abi
+          destination: wevotethefee.abi
+      - store_artifacts:
+          path: ./build/contracts/wevotethefee/wevotethefee.wasm
+          destination: wevotethefee.wasm
+  test:
+    description: "Run Tests"
+    steps:
+      - run:
+          command: |
+            mkdir -p ./test-results
+            make test-local
+          environment:
+            BOOST_TEST_LOG_FORMAT: JUNIT
+            BOOST_TEST_LOG_SINK: test-results/junit.xml
+      - store_test_results:
+          path: ./test-results
+      - store_artifacts:
+          path: ./test-results/junit.xml
+          destination: junit.xml
+jobs:
+  build_and_test:
+    executor: default
+    steps:
+      - checkout
+      - build_project
+      - test
+workflows:
+  pr:
+    jobs:
+      - build_and_test
